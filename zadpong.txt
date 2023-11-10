@@ -1,0 +1,173 @@
+int playerY; // pozycja paletki gracza
+int playerX; // pozycja drugiego gracza
+int playerSpeed = 5; // prędkość poruszania się paletki
+int playerHeightY = 60;
+int playerHeightX = 60;
+boolean moveUpY = false; // flaga poruszania paletki gracza w górę
+boolean moveDownY = false; // flaga poruszania paletki gracza w dół
+boolean moveUpX = false; // flaga poruszania paletki drugiego gracza w 
+górę
+boolean moveDownX = false; // flaga poruszania paletki drugiego gracza w 
+dół
+
+float ballX; // pozycja piłki w osi X
+float ballY; // pozycja piłki w osi Y
+float ballSpeedX = 5; // prędkość piłki w osi X
+float ballSpeedY = 5; // prędkość piłki w osi Y
+float ballSize = 10; // rozmiar piłki
+
+int scorePlayerY = 0; // punkty gracza Y
+int scorePlayerX = 0; // punkty gracza X
+int maxScore = 10; // limit punktów do wygranej
+
+boolean gameEnded = false; // flaga informująca o zakończeniu gry
+
+void setup() {
+  size(800, 400);
+  playerY = height / 2;
+  playerX = height / 2;
+  ballX = width / 2;
+  ballY = height / 2;
+}
+
+void draw() {
+  background(0);
+
+  // Rysowanie paletki gracza
+  rect(10, playerY - playerHeightY / 2, 10, playerHeightY);
+
+  // Rysowanie paletki drugiego gracza
+  rect(width - 30, playerX - playerHeightX / 2, 10, playerHeightX);
+
+  // Rysowanie piłki
+  ellipse(ballX, ballY, ballSize, ballSize);
+
+  // Poruszanie paletkami
+  movePlayerYPaddle();
+  movePlayerXPaddle();
+
+  // Poruszanie piłką
+  if (!gameEnded) {
+    moveBall();
+  }
+
+  // Kolizja piłki z paletkami
+  checkCollision();
+
+  // Wyświetlanie punktów
+  displayScore();
+
+  // Sprawdzanie zakończenia gry
+  checkGameEnd();
+}
+
+void movePlayerYPaddle() {
+  if (moveUpY && playerY > playerHeightY / 2) {
+    playerY -= playerSpeed; // Poruszanie paletką gracza w górę
+  } else if (moveDownY && playerY < height - playerHeightY / 2) {
+    playerY += playerSpeed; // Poruszanie paletką gracza w dół
+  }
+}
+
+void movePlayerXPaddle() {
+  if (moveUpX && playerX > playerHeightX / 2) {
+    playerX -= playerSpeed; // Poruszanie paletką drugiego gracza w górę
+  } else if (moveDownX && playerX < height - playerHeightX / 2) {
+    playerX += playerSpeed; // Poruszanie paletką drugiego gracza w dół
+  }
+}
+
+void moveBall() {
+  // Poruszanie piłką w osi X i Y
+  ballX += ballSpeedX;
+  ballY += ballSpeedY;
+
+  // Odbicie piłki od górnej i dolnej krawędzi ekranu
+  if (ballY < 0 || ballY > height) {
+    ballSpeedY *= -1;
+  }
+
+  // Sprawdzenie, czy piłka dotknęła lewej lub prawej ściany
+  if (ballX < 0) {
+    ballX = width / 2; // Przywrócenie piłki na środek
+    ballY = height / 2;
+    ballSpeedX = 5; // Resetowanie prędkości piłki
+    ballSpeedY = 5;
+    scorePlayerX++; // Zwiększenie punktu gracza X
+  } else if (ballX > width) {
+    ballX = width / 2; // Przywrócenie piłki na środek
+    ballY = height / 2;
+    ballSpeedX = -5; // Resetowanie prędkości piłki
+    ballSpeedY = 5;
+    scorePlayerY++; // Zwiększenie punktu gracza Y
+  }
+}
+
+void checkCollision() {
+  // Sprawdzenie kolizji piłki z paletką gracza
+  if (ballX - ballSize / 2 < 20 && ballY >= playerY - playerHeightY / 2 && 
+ballY <= playerY + playerHeightY / 2) {
+    ballSpeedX *= -1;
+  }
+
+  // Sprawdzenie kolizji piłki z paletką drugiego gracza
+  if (ballX + ballSize / 2 > width - 30 && ballY >= playerX - 
+playerHeightX / 2 && ballY <= playerX + playerHeightX / 2) {
+    ballSpeedX *= -1;
+  }
+}
+
+void displayScore() {
+  textSize(24);
+  textAlign(CENTER);
+  fill(255);
+  text("Player Y: " + scorePlayerY, width / 4, 30);
+  text("Player X: " + scorePlayerX, width * 3 / 4, 30);
+}
+
+void checkGameEnd() {
+  if (scorePlayerY >= maxScore || scorePlayerX >= maxScore) {
+    gameEnded = true;
+    textSize(32);
+    fill(255);
+    textAlign(CENTER);
+    if (scorePlayerY >= maxScore) {
+      text("Player Y has won!", width / 2, height / 2);
+    } else {
+      text("Player X has won!", width / 2, height / 2);
+    }
+  }
+}
+
+void keyPressed() {
+  if (keyCode == UP) {
+    moveUpY = true; // Ustawienie flagi poruszania paletki gracza w górę
+  } else if (keyCode == DOWN) {
+    moveDownY = true; // Ustawienie flagi poruszania paletki gracza w dół
+  }
+
+  if (key == 'w') {
+    moveUpX = true; // Ustawienie flagi poruszania paletki drugiego gracza 
+w górę
+  } else if (key == 's') {
+    moveDownX = true; // Ustawienie flagi poruszania paletki drugiego 
+gracza w dół
+  }
+}
+
+void keyReleased() {
+  if (keyCode == UP) {
+    moveUpY = false; // Resetowanie flagi poruszania paletki gracza w górę
+  } else if (keyCode == DOWN) {
+    moveDownY = false; // Resetowanie flagi poruszania paletki gracza w 
+dół
+  }
+
+  if (key == 'w') {
+    moveUpX = false; // Resetowanie flagi poruszania paletki drugiego 
+gracza w górę
+  } else if (key == 's') {
+    moveDownX = false; // Resetowanie flagi poruszania paletki drugiego 
+gracza w dół
+  }
+}

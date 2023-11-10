@@ -1,0 +1,199 @@
+// Stałe
+final int WIDTH = 800; // Szerokość ekranu
+final int HEIGHT = 600; // Wysokość ekranu
+final int PADDLE_WIDTH = 100; // Szerokość paletki
+final int PADDLE_HEIGHT = 20; // Wysokość paletki
+final int PADDLE_SPEED = 8; // Prędkość paletki
+final int BALL_RADIUS = 10; // Promień piłeczki
+final int BALL_SPEED = 5; // Prędkość piłeczki
+final int BRICK_ROWS = 6; // Liczba rzędów klocków
+final int BRICK_COLUMNS = 10; // Liczba kolumn klocków
+final int BRICK_WIDTH = 70; // Szerokość klocka
+final int BRICK_HEIGHT = 20; // Wysokość klocka
+
+// Zmienne
+float paddleX; // Pozycja X paletki
+float ballX, ballY; // Pozycja X i Y piłeczki
+float ballSpeedX, ballSpeedY; // Prędkość piłeczki
+boolean ballOnPaddle; // Czy piłeczka znajduje się na paletce
+boolean[][] bricks; // Tablica klocków
+
+void setup() {
+  size(800, 600);
+  smooth();
+
+  paddleX = WIDTH / 2; // Początkowa pozycja X paletki
+  ballX = paddleX; // Początkowa pozycja X piłeczki
+  ballY = HEIGHT - PADDLE_HEIGHT - BALL_RADIUS - 1; // Początkowa pozycja 
+Y piłeczki
+  ballSpeedX = random(-1, 1) * BALL_SPEED; // Losowa początkowa prędkość X 
+piłeczki
+  ballSpeedY = -BALL_SPEED; // Początkowa prędkość Y piłeczki
+  ballOnPaddle = true; // Piłeczka jest na paletce
+
+  bricks = new boolean[BRICK_ROWS][BRICK_COLUMNS];
+  for (int i = 0; i < BRICK_ROWS; i++) {
+    for (int j = 0; j < BRICK_COLUMNS; j++) {
+      bricks[i][j] = true; // Inicjalizacja wszystkich klocków jako 
+aktywne
+    }
+  }
+}
+
+void draw() {
+  background(0);
+  
+  // Rysowanie paletki
+  fill(255);
+  rectMode(CENTER);
+  rect(paddleX, HEIGHT - PADDLE_HEIGHT / 2, PADDLE_WIDTH, PADDLE_HEIGHT);
+  
+  // Rysowanie piłeczki
+  if (ballOnPaddle) {
+    ballX = paddleX; // Piłeczka na paletce
+  } else {
+    float nextBallX = ballX + ballSpeedX; // Obliczanie następnej pozycji 
+X piłeczki
+    float nextBallY = ballY + ballSpeedY; // Obliczanie następnej pozycji 
+Y piłeczki
+    
+    // Sprawdzanie kolizji z klockami
+    int brickWidthWithSpacing = BRICK_WIDTH + 2;
+    int brickHeightWithSpacing = BRICK_HEIGHT + 2;
+    int brickOffsetX = (WIDTH - BRICK_COLUMNS * brickWidthWithSpacing + 2) 
+/ 2 + 1;
+    int brickOffsetY = 80;
+  
+    boolean collided = false; // Flaga, czy wystąpiła kolizja
+    
+    for (int i = 0; i < BRICK_ROWS; i++) {
+      for (int j = 0; j < BRICK_COLUMNS; j++) {
+        if (bricks[i][j]) {
+          int brickX = j * brickWidthWithSpacing + brickOffsetX;
+          int brickY = i * brickHeightWithSpacing + brickOffsetY;
+          
+          // Sprawdzanie kolizji piłeczki z klockiem w każdym punkcie na 
+drodze
+          for (float step = 0; step <= 1; step += 0.1) {
+            float checkX = ballX + (nextBallX - ballX) * step;
+            float checkY = ballY + (nextBallY - ballY) * step;
+            
+            if (checkX + BALL_RADIUS >= brickX && checkX - BALL_RADIUS <= 
+brickX + BRICK_WIDTH &&
+                checkY + BALL_RADIUS >= brickY && checkY - BALL_RADIUS <= 
+brickY + BRICK_HEIGHT) {
+              bricks[i][j] = false; // Deaktywacja klocka
+              collided = true; // Ustawienie flagi kolizji
+              break;
+            }
+          }
+        }
+        if (collided) {
+          break;
+        }
+      }
+      if (collided) {
+        break;
+      }
+    }
+    
+    if (collided) {
+      ballSpeedY = -ballSpeedY; // Odbicie piłeczki
+    }
+    
+    ballX = nextBallX; // Aktualizacja pozycji X piłeczki
+    ballY = nextBallY; // Aktualizacja pozycji Y piłeczki
+  }
+  
+  fill(255);
+  ellipse(ballX, ballY, BALL_RADIUS * 2, BALL_RADIUS * 2);
+  
+  // Sprawdzanie kolizji z paletką
+  if (ballY + BALL_RADIUS >= HEIGHT - PADDLE_HEIGHT && ballY + BALL_RADIUS 
+<= HEIGHT && ballSpeedY > 0) {
+    if (ballX >= paddleX - PADDLE_WIDTH / 2 && ballX <= paddleX + 
+PADDLE_WIDTH / 2) {
+      ballSpeedY = -ballSpeedY;
+    }
+  }
+  
+  // Rysowanie klocków
+  for (int i = 0; i < BRICK_ROWS; i++) {
+    for (int j = 0; j < BRICK_COLUMNS; j++) {
+      if (bricks[i][j]) {
+        int brickX = j * (BRICK_WIDTH + 2) + ((WIDTH - BRICK_COLUMNS * 
+(BRICK_WIDTH + 2) + 2) / 2 + 1);
+        int brickY = i * (BRICK_HEIGHT + 2) + 80;
+        
+        fill(255);
+        rect(brickX, brickY, BRICK_WIDTH, BRICK_HEIGHT);
+      }
+    }
+  }
+  
+  // Poruszanie paletką
+  if (keyPressed) {
+    if (key == 'a' || key == 'A') {
+      paddleX -= PADDLE_SPEED;
+    } else if (key == 'd' || key == 'D') {
+      paddleX += PADDLE_SPEED;
+    }
+  }
+  
+  // Odbicie od ścian
+  if (ballX - BALL_RADIUS <= 0 || ballX + BALL_RADIUS >= WIDTH) {
+    ballSpeedX = -ballSpeedX;
+  }
+  if (ballY - BALL_RADIUS <= 0) {
+    ballSpeedY = -ballSpeedY;
+  }
+  
+  // Przegrana - piłeczka spadła poniżej paletki
+  if (ballY - BALL_RADIUS >= HEIGHT) {
+    gameOver();
+  }
+  
+  // Wygrana - wszystkie klocki zostały zniszczone
+  boolean win = true;
+  for (int i = 0; i < BRICK_ROWS; i++) {
+    for (int j = 0; j < BRICK_COLUMNS; j++) {
+      if (bricks[i][j]) {
+        win = false;
+        break;
+      }
+    }
+    if (!win) {
+      break;
+    }
+  }
+  if (win) {
+    gameWon();
+  }
+  startGame();
+}
+
+void gameOver() {
+  // Kod obsługi przegranej gry
+  textSize(32);
+  fill(255);
+  textAlign(CENTER, CENTER);
+  text("Game Over", WIDTH / 2, HEIGHT / 2);
+  
+  noLoop(); // Zatrzymanie aktualizacji ekranu
+}
+
+void gameWon() {
+  // Kod obsługi wygranej gry
+  textSize(32);
+  fill(255);
+  textAlign(CENTER, CENTER);
+  text("You Win!", WIDTH / 2, HEIGHT / 2);
+  
+  noLoop(); // Zatrzymanie aktualizacji ekranu
+}
+
+void startGame() {
+  if (ballOnPaddle && key == 'w') {
+    ballOnPaddle = false;
+  }
+}
